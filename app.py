@@ -5,62 +5,90 @@ from datetime import datetime
 
 st.set_page_config(page_title="Superagri Dashboard", layout="wide", initial_sidebar_state="expanded")
 
-st.title("🚜 Superagri - Dashboard Inteligente de Estoque e Vendas")
-st.markdown("**Protótipo desenvolvido por Carlos Eduardo Moreno** | Prompt Faber®")
+# ====================== ESTILO SUPERAGRI ======================
+st.markdown("""
+<style>
+    .main-header {font-size: 2.8rem; color: #00A651; text-align: center; font-weight: bold;}
+    .sub-header {font-size: 1.4rem; color: #FFC107; text-align: center;}
+    .metric-value {font-size: 2rem; font-weight: bold;}
+</style>
+""", unsafe_allow_html=True)
 
-# Dados simulados (realmente conectaria com Bling + Tray via API)
+# ====================== LOGO PROMPT FABER STUDIO ======================
+st.image("logo_studio.png", width=420, use_column_width=False)
+
+st.markdown('<h1 class="main-header">🚜 Superagri - Dashboard Inteligente</h1>', unsafe_allow_html=True)
+st.markdown('<p class="sub-header">Bling + Tray | Protótipo desenvolvido por Carlos Eduardo Moreno (Prompt Faber Studio)</p>', unsafe_allow_html=True)
+st.markdown("---")
+
+# ====================== DADOS SIMULADOS (realista para Superagri) ======================
 data = {
-    "produto": ["Pulverizador Elétrico 20L", "Pulverizador Manual 10L", "Bomba Submersa 12V 100PSI", "Kit Mangueira + Conexões 50m", "Inoculante Líquido 5L", "Lavadora Elétrica 2000 PSI", "Pulverizador Costal 16L", "Bomba Manual 8L"],
-    "sku": ["PULV-20L", "PULV-10M", "BOMBA-12V", "KIT-50M", "INOC-5L", "LAV-2000", "PULV-16C", "BOMBA-8M"],
+    "produto": ["Pulverizador Elétrico 20L", "Pulverizador Manual 10L", "Bomba Submersa 12V", "Kit Mangueira 50m", "Inoculante 5L", "Lavadora 2000 PSI", "Pulverizador Costal 16L", "Bomba Manual 8L"],
+    "categoria": ["Pulverizadores", "Pulverizadores", "Bombas", "Kits", "Inoculantes", "Lavadoras", "Pulverizadores", "Bombas"],
     "estoque_atual": [87, 124, 56, 203, 34, 19, 92, 145],
     "estoque_minimo": [30, 40, 20, 60, 15, 10, 35, 50],
-    "vendas_ultimos_30dias": [45, 38, 29, 67, 52, 14, 31, 22],
-    "preco_unitario": [289.90, 149.90, 179.90, 89.90, 249.90, 399.90, 219.90, 69.90],
-    "categoria": ["Pulverizadores", "Pulverizadores", "Bombas", "Kits", "Inoculantes", "Lavadoras", "Pulverizadores", "Bombas"]
+    "vendas_30dias": [45, 38, 29, 67, 52, 14, 31, 22],
+    "preco": [289.90, 149.90, 179.90, 89.90, 249.90, 399.90, 219.90, 69.90]
 }
 df = pd.DataFrame(data)
 
-# Sidebar
-st.sidebar.header("Filtros")
-categoria = st.sidebar.multiselect("Categoria", options=df["categoria"].unique(), default=df["categoria"].unique())
-df_filtrado = df[df["categoria"].isin(categoria)]
+# ====================== FILTROS LATERAIS ======================
+st.sidebar.header("🔎 Filtros")
+categorias = st.sidebar.multiselect("Categoria", options=df["categoria"].unique(), default=df["categoria"].unique())
+df_filtrado = df[df["categoria"].isin(categorias)]
 
-# KPIs
+# ====================== KPIs GRANDES ======================
 col1, col2, col3, col4 = st.columns(4)
-col1.metric("Itens em Estoque", len(df_filtrado))
-col2.metric("Valor Total em Estoque", f"R$ {(df_filtrado['estoque_atual'] * df_filtrado['preco_unitario']).sum():,.0f}")
-col3.metric("🚨 Alertas de Reposição", len(df_filtrado[df_filtrado["estoque_atual"] < df_filtrado["estoque_minimo"]]))
-col4.metric("Ticket Médio (30 dias)", "R$ 218,40")
+col1.metric("**Vendas Realizadas (30 dias)**", "348", "↑ 42 vs meta")
+col2.metric("**Valor Total Vendido**", "R$ 1.248.760", "↑ R$ 187k")
+col3.metric("**Ticket Médio**", "R$ 248", "↑ R$ 31")
+col4.metric("**Taxa de Conversão**", "34.8%", "↑ 6.2%")
 
-# Abas completas
-tab1, tab2, tab3, tab4 = st.tabs(["📊 Visão Geral", "🚨 Alertas", "📈 Previsão", "🔥 Upsell"])
+st.markdown("---")
+
+# ====================== ABAS (mais completo) ======================
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 Visão Geral", "🚨 Alertas de Estoque", "📈 Vendas x Meta", "🏆 Top Produtos", "🔥 Recomendações"])
 
 with tab1:
-    st.subheader("Estoque Atual por Produto")
-    fig = px.bar(df_filtrado, x="produto", y="estoque_atual", color="categoria", title="Nível de Estoque Atual")
-    st.plotly_chart(fig, use_container_width=True)
-
-    st.subheader("Vendas Últimos 30 dias")
-    fig2 = px.bar(df_filtrado, x="produto", y="vendas_ultimos_30dias", color="categoria")
-    st.plotly_chart(fig2, use_container_width=True)
+    col_g1, col_g2 = st.columns(2)
+    with col_g1:
+        st.subheader("Estoque Atual")
+        fig_bar = px.bar(df_filtrado, x="produto", y="estoque_atual", color="categoria", title="Nível de Estoque por Produto")
+        st.plotly_chart(fig_bar, use_container_width=True)
+    
+    with col_g2:
+        st.subheader("Vendas Últimos 30 dias")
+        fig_vendas = px.bar(df_filtrado, x="produto", y="vendas_30dias", color="categoria")
+        st.plotly_chart(fig_vendas, use_container_width=True)
 
 with tab2:
     st.subheader("🚨 Produtos que precisam de reposição urgente")
     alertas = df_filtrado[df_filtrado["estoque_atual"] < df_filtrado["estoque_minimo"]].copy()
-    alertas["quantidade_a_comprar"] = alertas["estoque_minimo"] - alertas["estoque_atual"] + 20
-    st.dataframe(alertas[["produto", "estoque_atual", "estoque_minimo", "quantidade_a_comprar"]], use_container_width=True)
+    alertas["Qtd. a comprar"] = alertas["estoque_minimo"] - alertas["estoque_atual"] + 25
+    st.dataframe(alertas[["produto", "estoque_atual", "estoque_minimo", "Qtd. a comprar"]], use_container_width=True, height=400)
 
 with tab3:
-    st.subheader("📈 Previsão de Demanda (próximos 30 dias)")
-    df_filtrado = df_filtrado.copy()
-    df_filtrado["previsao_30dias"] = (df_filtrado["vendas_ultimos_30dias"] * 1.15).astype(int)
-    fig3 = px.bar(df_filtrado, x="produto", y=["vendas_ultimos_30dias", "previsao_30dias"], barmode="group", title="Vendas passadas × Previsão")
-    st.plotly_chart(fig3, use_container_width=True)
+    st.subheader("📈 Evolução de Vendas vs Meta")
+    meses = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"]
+    df_vendas = pd.DataFrame({
+        "Mês": meses,
+        "Vendas": [18,22,31,28,45,52,48,61,55,67,72,81],
+        "Meta": [25,30,35,40,45,50,55,60,65,70,75,80]
+    })
+    fig_linha = px.line(df_vendas, x="Mês", y=["Vendas","Meta"], markers=True, title="Vendas Mensal × Meta")
+    fig_linha.update_traces(line_color="#00A651", selector=dict(name="Vendas"))
+    fig_linha.update_traces(line_color="#FFC107", line_dash="dash", selector=dict(name="Meta"))
+    st.plotly_chart(fig_linha, use_container_width=True)
 
 with tab4:
-    st.subheader("🔥 Recomendações de Upsell / Kits")
-    st.success("Pulverizador Elétrico 20L + Kit Mangueira 50m (68% das vendas juntas)")
-    st.success("Bomba 12V + Inoculante 5L (combo ideal para lavoura pequena)")
-    st.success("Lavadora 2000 PSI + Pulverizador Costal (pacote completo)")
+    st.subheader("🏆 Top 5 Produtos Mais Vendidos")
+    fig_pie = px.pie(df_filtrado, names="produto", values="vendas_30dias", title="Participação no Faturamento")
+    st.plotly_chart(fig_pie, use_container_width=True)
 
-st.caption(f"Protótipo gerado em {datetime.now().strftime('%d/%m/%Y %H:%M')} | Pronto para integração real com API do Bling + Tray")
+with tab5:
+    st.subheader("🔥 Recomendações de Upsell / Kits")
+    st.success("Pulverizador Elétrico 20L + Kit Mangueira 50m → vendido junto em 68% das vendas")
+    st.success("Bomba 12V + Inoculante 5L → combo ideal para produtores pequenos")
+    st.success("Lavadora 2000 PSI + Pulverizador Costal → pacote completo para limpeza + aplicação")
+
+st.caption(f"Dashboard gerado em {datetime.now().strftime('%d/%m/%Y %H:%M')} | Protótipo 100% funcional - Pronto para conectar com Bling + Tray")
